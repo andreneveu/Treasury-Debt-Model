@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.tseries.offsets import *
+import urllib, json
+
+
 
 pd.options.mode.chained_assignment = None
 pd.set_option("display.expand_frame_repr", False)
@@ -44,6 +47,39 @@ def normalize_date_formats(security):
 
     return security
 
+def read_mspd_json(file_path, include_bills=True):
+    """
+    Takes in an MSPD Excel spreadsheet and extracts outstanding debt information into a DataFrame
+    :param:
+        file_path: String containing path to target MSPD file (.xls)
+        include_bills; Boolean identifying whether to read outstanding bills or not; defaults to True
+    :return:
+        full_mspd_df: DataFrame with all outstanding debt information containing normalized dates/units
+        mspd_pub_date: Datetime value with MSPD publication date
+    """
+    base_url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service"
+    endpoint_url = "/v1/debt/mspd/mspd_table_3_market"
+    filter_url = "?filter=record_date:gte"
+    date_url = ":2022-06-01"
+    pages_url = "&page[size]=10000"
+    
+    full_url = base_url + endpoint_url + filter_url + date_url + pages_url
+    
+    response = urllib.request.urlopen(full_url)
+    df0 = json.loads(response.read())
+    df = pd.json_normalize(data = df0, record_path =  ["data"])
+    columns1 = ["interest_rate_pct", "yield_pct", "issued_amt", "inflation_adj_amt", "redeemed_amt",
+               "outstanding_amt","record_fiscal_year", "record_fiscal_quarter", 
+               "record_calendar_year", "record_calendar_quarter","record_calendar_month", 
+               "record_calendar_day","src_line_nbr"]
+    columns2 = ["record_date", "issue_date", "maturity_date"]
+    columns3 = ["security_type_desc", "security_class1_desc", "security_class2_desc", "series_cd"]
+    df[columns1] = df[columns1].apply(pd.to_numeric, errors = "coerce")
+    df[columns2] = df[columns2].apply(pd.to_datetime, errors = "coerce")
+    df[columns3] = df[columns3].astype("string")
+
+    
+    
 
 def read_mspd(file_path, include_bills=True):
     """
@@ -55,6 +91,18 @@ def read_mspd(file_path, include_bills=True):
         full_mspd_df: DataFrame with all outstanding debt information containing normalized dates/units
         mspd_pub_date: Datetime value with MSPD publication date
     """
+    base_url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service"
+    endpoint_url = "/v1/debt/mspd/mspd_table_3_market"
+    filter_url = "?filter=record_date:gte"
+    date_url = ":2022-06-01"
+    pages_url = "&page[size]=10000"
+    
+    full_url = base_url + endpoint_url + filter_url + date_url + pages_url
+    
+    response = urllib.request.urlopen(full_url)
+    data = json.loads(response.read())
+    
+    
     full_mspd_df = pd.read_excel(
         file_path, sheet_name="Marketable", usecols="B:E, G:J, L, N, P", header=None
     )
