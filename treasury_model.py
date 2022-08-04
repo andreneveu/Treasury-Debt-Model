@@ -13,6 +13,9 @@ pd.options.mode.chained_assignment = None
 pd.set_option("display.expand_frame_repr", False)
 pd.set_option("display.max_rows", None)
 
+file_path = "input_data/mspd/MSPD_Mar2022.xls"
+
+
 
 def normalize_date_formats(security):
     """
@@ -68,6 +71,7 @@ def read_mspd_json(file_path, include_bills=True):
     response = urllib.request.urlopen(full_url)
     df0 = json.loads(response.read())
     df = pd.json_normalize(data = df0, record_path =  ["data"])
+    # dfcol = df0["meta"]["labels"]
     columns1 = ["interest_rate_pct", "yield_pct", "issued_amt", "inflation_adj_amt", "redeemed_amt",
                "outstanding_amt","record_fiscal_year", "record_fiscal_quarter", 
                "record_calendar_year", "record_calendar_quarter","record_calendar_month", 
@@ -77,6 +81,9 @@ def read_mspd_json(file_path, include_bills=True):
     df[columns1] = df[columns1].apply(pd.to_numeric, errors = "coerce")
     df[columns2] = df[columns2].apply(pd.to_datetime, errors = "coerce")
     df[columns3] = df[columns3].astype("string")
+
+    df["maturity date"]
+    full_mspd_df["Maturity Date"] = (full_mspd_df["Maturity Date"] + 0 * BDay()).dt.date
 
     
     
@@ -91,17 +98,6 @@ def read_mspd(file_path, include_bills=True):
         full_mspd_df: DataFrame with all outstanding debt information containing normalized dates/units
         mspd_pub_date: Datetime value with MSPD publication date
     """
-    base_url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service"
-    endpoint_url = "/v1/debt/mspd/mspd_table_3_market"
-    filter_url = "?filter=record_date:gte"
-    date_url = ":2022-06-01"
-    pages_url = "&page[size]=10000"
-    
-    full_url = base_url + endpoint_url + filter_url + date_url + pages_url
-    
-    response = urllib.request.urlopen(full_url)
-    data = json.loads(response.read())
-    
     
     full_mspd_df = pd.read_excel(
         file_path, sheet_name="Marketable", usecols="B:E, G:J, L, N, P", header=None
