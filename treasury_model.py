@@ -13,7 +13,7 @@ pd.options.mode.chained_assignment = None
 pd.set_option("display.expand_frame_repr", False)
 pd.set_option("display.max_rows", None)
 
-file_path = "input_data/mspd/MSPD_Mar2022.xls"
+file_path = r'./input_data/mspd/MSPD_Mar2022.xls'
 
 
 
@@ -185,6 +185,9 @@ def read_mspd(file_path, include_bills=True):
     full_mspd_df["Inflation Adj"] = full_mspd_df["Inflation Adj"] / 1000
     full_mspd_df["Redeemed"] = full_mspd_df["Redeemed"] / 1000
     full_mspd_df["Outstanding"] = full_mspd_df["Outstanding"] / 1000
+    
+    # Added here by AN to set Maturity Date to date format. Wasn't working
+    full_mspd_df["Maturity Date"] = pd.to_datetime(full_mspd_df["Maturity Date"])
 
     # Convert all maturity dates to next business day to account for Treasury weekend/holiday settlement rules
     full_mspd_df["Maturity Date"] = (full_mspd_df["Maturity Date"] + 0 * BDay()).dt.date
