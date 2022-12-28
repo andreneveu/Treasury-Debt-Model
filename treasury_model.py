@@ -52,7 +52,7 @@ def normalize_date_formats(security):
 
 def read_mspd_json(file_path, include_bills=True):
     """
-    Takes in an MSPD Excel spreadsheet and extracts outstanding debt information into a DataFrame
+    Takes in an MSPD JSON file and extracts outstanding debt information into a DataFrame
     :param:
         file_path: String containing path to target MSPD file (.xls)
         include_bills; Boolean identifying whether to read outstanding bills or not; defaults to True
@@ -289,10 +289,12 @@ def read_disc_assumptions(file_path, date_col):
     fy_funding_table["FY"] = fy_funding_table["FY"].astype("int")
 
     # Store model end date for subsequent error checking
-    temp_model_end_date = date_col.iat[-1].date()
+    temp_model_end_date = pd.Timestamp(date_col.iat[-1])
+    # temp_model_end_date = date_col.iat[-1].date()
 
     # Error checks for FY funding needs: input file length, non-negative funding needs, date formatting
-    if temp_model_end_date > dt.date(int(fy_funding_table["FY"].iat[-1]), 9, 15):
+    # if temp_model_end_date > dt.date(int(fy_funding_table["FY"].iat[-1]), 9, 15):
+    if temp_model_end_date > pd.Timestamp(int(fy_funding_table["FY"].iat[-1]), 9, 15):
         warnings.warn(
             "Warning: Funding need assumptions have not been provided for all necessary fiscal years. Update "
             "the file 'discretionary_assumptions.xlsx' to ensure a funding need is provided for each fiscal "
@@ -315,7 +317,8 @@ def read_disc_assumptions(file_path, date_col):
         )
 
     # Error checks for QE path: input file length, non-negative values, date formatting
-    if temp_model_end_date > qe_path["Month"].iat[-1]:
+    # if temp_model_end_date > qe_path["Month"].iat[-1]:
+    if temp_model_end_date > pd.Timestamp(qe_path["Month"].iat[-1]):
         warnings.warn(
             "Warning: QE path has not been provided for all necessary months. Update these inputs in the file"
             " 'discretionary_assumptions.xlsx' to ensure each month has an associated QE path assumption and "
@@ -350,7 +353,8 @@ def read_disc_assumptions(file_path, date_col):
         )
 
     # Error checks for SOMA Runoff Caps: input file length, non-negative values, date formatting
-    if temp_model_end_date > runoff_caps["Month"].iat[-1]:
+    # if temp_model_end_date > runoff_caps["Month"].iat[-1]:
+    if temp_model_end_date > pd.Timestamp(runoff_caps["Month"].iat[-1]):
         warnings.warn(
             "Warning: SOMA runoff caps have not been provided for all necessary months. Update these inputs "
             "in the file 'discretionary_assumptions.xlsx' to ensure each month has an associated runoff cap "
@@ -1740,7 +1744,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Write outputs to the specified Excel file
-    output_file_path = "output_files/Output_2022_03_31.xlsx"
+    output_file_path = "output_files/Output_2022_08_10.xlsx"
     with pd.ExcelWriter(output_file_path, engine="openpyxl", mode="a") as writer:
         final_net_issuance_summary_df.to_excel(
             writer, sheet_name="Net Issuance Summary"
